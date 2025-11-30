@@ -1,0 +1,226 @@
+{
+  "name": "Pre-entrega \"webhook → API → IF → email\"",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "preentrega-catfact",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "baf43227-9edf-4ef3-84c9-5056173de67e",
+      "name": "Webhook",
+      "webhookId": "3af0b7eb-3ac5-42e5-8be8-40a11cf38847"
+    },
+    {
+      "parameters": {
+        "url": "https://catfact.ninja/fact",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "40010f63-abf5-4dfd-b903-98d050fb552f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9b45e9e0-aa74-4ef9-8dc5-459adb95c899",
+              "leftValue": "={{ $json.fact.toLowerCase() }}\n",
+              "rightValue": "cat",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "c532df01-9f1e-4e9c-b882-e7e7efa868da",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53c3be57-7fa7-468f-b1e2-e9ee55525ee7",
+              "name": "fact",
+              "value": "={{ $json.fact }}\n",
+              "type": "string"
+            },
+            {
+              "id": "b7703964-6b38-44ff-b2c7-59b27c310d14",
+              "name": "status",
+              "value": "match",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -112
+      ],
+      "id": "2b05c906-9709-4b0a-b183-04011a357fed",
+      "name": "Set True"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5c944dfa-8c95-49db-af9d-07c4726b2826",
+              "name": "fact",
+              "value": "={{ $json.fact }}\n",
+              "type": "string"
+            },
+            {
+              "id": "a2088eaf-3e17-4072-b7be-a3da8dd23df1",
+              "name": "status",
+              "value": "no_match",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        96
+      ],
+      "id": "03b7ca64-0a2f-4665-8f34-5278cf3689a3",
+      "name": "Set False"
+    },
+    {
+      "parameters": {
+        "sendTo": "ciropupillo16@gmail.com",
+        "subject": "={{ $json.status === \"match\" ? \"Cat fact encontrado\" : \"Cat fact sin coincidencia\" }}\n``` |\n| **Email Type** | `Plain Text` o `HTML` (recomendado: `Plain Text` para esta etapa) |\n| **Message** | Clic en engranaje → “Add Expression” → pegá:  \n```js\nFact: {{ $json.fact }}  \nEstado: {{ $json.status }}\n",
+        "emailType": "text",
+        "message": "=Fact: {{ $json.fact }}  \nEstado: {{ $json.status }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        848,
+        0
+      ],
+      "id": "b481569b-0da5-46fe-bcb7-644f46acb267",
+      "name": "Send a message",
+      "webhookId": "359e60bb-6a85-4c64-97d8-0f5830888979",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eeE7LyYRkcdAOS5l",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Set True",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set False",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set True": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set False": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a4704725-32d0-449f-ae42-656314687b2e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a58785d38d6dec9f9532c710d87c71dea0a36c028b8500e9606ea57a6ab26cc8"
+  },
+  "id": "ouu4rK2WLd0PbpH7",
+  "tags": []
+}
